@@ -1,7 +1,8 @@
+import React from "react";
 import { GeoJSON } from "react-leaflet";
 import boundary from "../../data/debrecenBoundary.json";
 
-export default function DebrecenBoundary() {
+const DebrecenBoundary = React.memo(function DebrecenBoundary() {
   return (
     <GeoJSON
       data={boundary as GeoJSON.GeoJsonObject}
@@ -14,4 +15,6 @@ export default function DebrecenBoundary() {
       }}
     />
   );
-}
+});
+
+export default DebrecenBoundary;

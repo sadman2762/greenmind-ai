@@ -21,22 +21,22 @@ export interface SensorRecommendation {
   recommendedSensor: string;
   primaryMonitoringNeed: MonitoringNeed;
 
-  estimatedPm25: number;
-  estimatedPm10: number;
-  estimatedNo2: number;
-  estimatedO3: number;
-  estimatedWindSpeed: number;
+  estimatedPm25?: number | null;
+  estimatedPm10?: number | null;
+  estimatedNo2?: number | null;
+  estimatedO3?: number | null;
+  estimatedWindSpeed?: number | null;
 
-  estimatedPm25Std: number;
-  estimatedPm10Std: number;
-  estimatedNo2Std: number;
+  estimatedPm25Std?: number | null;
+  estimatedPm10Std?: number | null;
+  estimatedNo2Std?: number | null;
 
-  estimatedDaytimeNoise: number;
-  estimatedNighttimeNoise: number;
+  estimatedDaytimeNoise?: number | null;
+  estimatedNighttimeNoise?: number | null;
 
-  estimatedConductivity: number;
-  estimatedWaterLevel: number;
-  estimatedWaterTemperature: number;
+  estimatedConductivity?: number | null;
+  estimatedWaterLevel?: number | null;
+  estimatedWaterTemperature?: number | null;
 
   coverageScore: number;
   airCoverageScore: number;
@@ -88,4 +88,17 @@ export interface SensorRecommendation {
   nearbyPassengerFrequency: number;
   nearbyPassengersIn: number;
   nearbyPassengersOut: number;
+
+  // Machine Learning & Spatial Kriging Active Learning Metrics
+  krigingUncertainty?: number;
+  informationGainScore?: number;
+  surrogateRiskScore?: number;
+  mlConfidence?: number;
+  mlModelUsed?: string;
+  mlPredictedPm25?: number | null;
+  mlPredictedNo2?: number | null;
+  receptorsProtected?: number;
+  anchorCategory?: string;
+  anchorCategoryLabel?: string;
+  placementRationale?: string;
 }

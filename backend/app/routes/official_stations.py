@@ -31,6 +31,28 @@ def extract_station_id(station_code: str) -> int | None:
     return int(match.group(1))
 
 
+OFFICIAL_STATION_NAMES: dict[int, str] = {
+    1: "Szab\u00f3 P\u00e1l street, Medical Clinic",
+    2: "Kar\u00e1csony Gy\u00f6rgy street, Nursery",
+    3: "Sz\u00e1vay Gyula street, Home for the Elderly",
+    4: "Debreceni V\u00edzm\u0171 Ltd. II. no. waterworks",
+    5: "DSZC Kreat\u00edv Technikum",
+    6: "Debreceni V\u00f6r\u00f6smarty Mih\u00e1ly Elementary School",
+    7: "Wessel\u00e9nyi housing estate",
+    8: "H\u00e1rmashegy Forest School",
+    9: "Vez\u00e9r street reservoir",
+    10: "Mikep\u00e9rcs, R\u00f3zs\u00e1s street",
+    11: "HUN-REN Institute for Nuclear Research",
+    12: "Debrecen-J\u00f3zsa, Klastrompart row, playground",
+    13: "Debrecen-J\u00f3zsa, T\u00f3c\u00f3 surface water station",
+    14: "Surface water station near T\u00f3c\u00f3 (crossing of road 481)",
+    15: "Northwestern Economic Zone, BMW tour",
+    16: "North-Western Economic Zone, M35 J\u00f3zsa junction",
+    17: "Szepes, S\u00e1rga d\u0171l\u0151",
+    18: "Southern Economic Zone junction 481-47 intersection",
+}
+
+
 def load_station_metadata() -> dict[int, dict[str, Any]]:
     if not STATION_METADATA_FILE.exists():
         raise HTTPException(
@@ -67,10 +89,11 @@ def load_station_metadata() -> dict[int, dict[str, Any]]:
 
         metadata_by_id[station_id] = {
             "id": station_id,
-            "name": (
+            "name": OFFICIAL_STATION_NAMES.get(
+                station_id,
                 item.get("title", {}).get("en")
                 or item.get("name")
-                or f"Station {station_id}"
+                or f"Station {station_id}",
             ),
             "lat": latitude,
             "lng": longitude,

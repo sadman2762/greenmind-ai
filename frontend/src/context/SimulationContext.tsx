@@ -7,9 +7,18 @@ import {
 
 import type { Station } from "../types/station";
 import type { SensorRecommendation } from "../types/recommendation";
+import { createCustomRecommendation } from "../utils/createCustomRecommendation";
+
+import { TIER_CONFIGS, type SensorTier, type OptimizedStation, type TierConfig } from "../types/budget";
 
 export interface SimulatedStation extends Station {
   recommendation: SensorRecommendation;
+  isCustom?: boolean;
+  sensorTier?: SensorTier;
+  tierName?: string;
+  tierBadge?: string;
+  unitCost?: number;
+  annualOm?: number;
 }
 
 interface SimulationContextType {
@@ -19,7 +28,44 @@ interface SimulationContextType {
     recommendation: SensorRecommendation,
   ) => void;
 
+  deployOptimizedPlan: (stations: OptimizedStation[]) => void;
+
+  addCustomPin: (
+    lat: number,
+    lng: number,
+    stations: Station[],
+    tier?: SensorTier,
+  ) => number;
+
+  updateCustomPin: (
+    id: number,
+    lat: number,
+    lng: number,
+    stations: Station[],
+  ) => void;
+
+  updateStationPosition: (
+    id: number,
+    lat: number,
+    lng: number,
+    stations: Station[],
+  ) => void;
+
+  updateStationTier: (
+    id: number,
+    tier: SensorTier,
+    tierConfig: TierConfig,
+  ) => void;
+
+  removeSimulatedStation: (id: number) => void;
+
   clearSimulation: () => void;
+
+  isPlacingCustomPin: boolean;
+  setIsPlacingCustomPin: (placing: boolean | ((prev: boolean) => boolean)) => void;
+
+  customPinTier: SensorTier;
+  setCustomPinTier: (tier: SensorTier) => void;
 }
 
 const SimulationContext =
@@ -34,26 +80,27 @@ export function SimulationProvider({
     SimulatedStation[]
   >([]);
 
+  const [isPlacingCustomPin, setIsPlacingCustomPin] = useState(false);
+  const [customPinTier, setCustomPinTier] = useState<SensorTier>("iot");
+
   function simulateRecommendation(
     recommendation: SensorRecommendation,
   ) {
     const station: SimulatedStation = {
-      id: Date.now(),
-
-      name: "Simulated AI Sensor",
-
+      id: recommendation.id || Date.now(),
+      name: `Simulated Sensor #${recommendation.id}`,
       lat: recommendation.lat,
       lng: recommendation.lng,
-
       station_type: 0,
-
       pm25: recommendation.estimatedPm25,
-
+      pm10: recommendation.estimatedPm10,
+      no2: recommendation.estimatedNo2,
+      o3: recommendation.estimatedO3,
       windSpeed: recommendation.estimatedWindSpeed,
-
       windDirection: 0,
-
       recommendation,
+      isCustom: false,
+      sensorTier: "iot",
     };
 
     setSimulatedStations((previous) => {
@@ -71,6 +118,144 @@ export function SimulationProvider({
     });
   }
 
+  function addCustomPin(
+    lat: number,
+    lng: number,
+    stations: Station[],
+    tier?: SensorTier,
+  ): number {
+    const pinId = Date.now();
+    const recommendation = createCustomRecommendation(lat, lng, stations, pinId);
+    const selectedTier = tier || customPinTier || "iot";
+    const tierConfig = TIER_CONFIGS[selectedTier];
+
+    const station: SimulatedStation = {
+      id: pinId,
+      name: `Custom ${tierConfig.name} #${pinId.toString().slice(-4)}`,
+      lat,
+      lng,
+      station_type: 0,
+      pm25: recommendation.estimatedPm25,
+      pm10: recommendation.estimatedPm10,
+      no2: recommendation.estimatedNo2,
+      o3: recommendation.estimatedO3,
+      windSpeed: recommendation.estimatedWindSpeed,
+      windDirection: 0,
+      recommendation,
+      isCustom: true,
+      sensorTier: selectedTier,
+      tierName: tierConfig.name,
+      tierBadge: tierConfig.badge,
+      unitCost: tierConfig.unitCost,
+      annualOm: tierConfig.annualOm,
+    };
+
+    setSimulatedStations((previous) => [...previous, station]);
+    return pinId;
+  }
+
+  function updateCustomPin(
+    id: number,
+    lat: number,
+    lng: number,
+    stations: Station[],
+  ) {
+    updateStationPosition(id, lat, lng, stations);
+  }
+
+  function updateStationPosition(
+    id: number,
+    lat: number,
+    lng: number,
+    stations: Station[],
+  ) {
+    setSimulatedStations((previous) =>
+      previous.map((station) => {
+        if (station.id !== id) {
+          return station;
+        }
+
+        const recommendation = createCustomRecommendation(
+          lat,
+          lng,
+          stations,
+          id,
+        );
+
+        return {
+          ...station,
+          lat,
+          lng,
+          pm25: recommendation.estimatedPm25,
+          pm10: recommendation.estimatedPm10,
+          no2: recommendation.estimatedNo2,
+          o3: recommendation.estimatedO3,
+          windSpeed: recommendation.estimatedWindSpeed,
+          recommendation: {
+            ...station.recommendation,
+            ...recommendation,
+            lat,
+            lng,
+          },
+        };
+      }),
+    );
+  }
+
+  function updateStationTier(
+    id: number,
+    tier: SensorTier,
+    tierConfig: TierConfig,
+  ) {
+    setSimulatedStations((previous) =>
+      previous.map((station) => {
+        if (station.id !== id) return station;
+        return {
+          ...station,
+          sensorTier: tier,
+          tierName: tierConfig.name,
+          tierBadge: tierConfig.badge,
+          unitCost: tierConfig.unitCost,
+          annualOm: tierConfig.annualOm,
+          name: station.isCustom
+            ? `Custom ${tierConfig.name} #${station.id.toString().slice(-4)}`
+            : `${tierConfig.badge}: Sensor #${station.id}`,
+        };
+      }),
+    );
+  }
+
+  function removeSimulatedStation(id: number) {
+    setSimulatedStations((previous) =>
+      previous.filter((station) => station.id !== id),
+    );
+  }
+
+  function deployOptimizedPlan(stations: OptimizedStation[]) {
+    const newSimulatedStations: SimulatedStation[] = stations.map((st) => ({
+      id: st.id,
+      name: `${st.tierBadge}: Sensor #${st.id}`,
+      lat: st.lat,
+      lng: st.lng,
+      station_type: 0,
+      pm25: st.estimatedPm25,
+      pm10: st.estimatedPm10,
+      no2: st.estimatedNo2,
+      o3: st.estimatedO3,
+      windSpeed: st.estimatedWindSpeed,
+      windDirection: 0,
+      recommendation: st,
+      isCustom: false,
+      sensorTier: st.sensorTier,
+      tierName: st.tierName,
+      tierBadge: st.tierBadge,
+      unitCost: st.unitCost,
+      annualOm: st.annualOm,
+    }));
+
+    setSimulatedStations(newSimulatedStations);
+  }
+
   function clearSimulation() {
     setSimulatedStations([]);
   }
@@ -79,9 +264,19 @@ export function SimulationProvider({
     () => ({
       simulatedStations,
       simulateRecommendation,
+      deployOptimizedPlan,
+      addCustomPin,
+      updateCustomPin,
+      updateStationPosition,
+      updateStationTier,
+      removeSimulatedStation,
       clearSimulation,
+      isPlacingCustomPin,
+      setIsPlacingCustomPin,
+      customPinTier,
+      setCustomPinTier,
     }),
-    [simulatedStations],
+    [simulatedStations, isPlacingCustomPin, customPinTier],
   );
 
   return (

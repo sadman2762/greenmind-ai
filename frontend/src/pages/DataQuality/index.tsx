@@ -23,9 +23,18 @@ interface DataQualitySummary {
   missingValuesAfterCleaning: number;
 }
 
+interface DomainSummary {
+  rawRecords: number;
+  finalRecords: number;
+  stationCount: number;
+  measurementTypes: number;
+}
+
 interface DataQualityResponse {
   source: string;
   summary: DataQualitySummary;
+  noiseSummary?: DomainSummary;
+  waterSummary?: DomainSummary;
 }
 
 interface QualityCard {
@@ -38,16 +47,6 @@ interface QualityCard {
 
 const API_URL =
   "http://localhost:8000/api/data-quality/";
-
-const NOISE_RAW_RECORDS = 300;
-const NOISE_FINAL_RECORDS = 300;
-const NOISE_STATIONS = 5;
-const NOISE_MEASUREMENT_TYPES = 2;
-
-const WATER_RAW_RECORDS = 31_625;
-const WATER_FINAL_RECORDS = 31_625;
-const WATER_STATIONS = 15;
-const WATER_MEASUREMENT_TYPES = 3;
 
 function QualityMetricCard({
   card,
@@ -228,22 +227,32 @@ export default function DataQuality() {
     );
   }
 
-  const { summary } = data;
+  const { summary, noiseSummary, waterSummary } = data;
+
+  const noiseRaw = noiseSummary?.rawRecords ?? 300;
+  const noiseFinal = noiseSummary?.finalRecords ?? 300;
+  const noiseStations = noiseSummary?.stationCount ?? 5;
+  const noiseTypes = noiseSummary?.measurementTypes ?? 2;
+
+  const waterRaw = waterSummary?.rawRecords ?? 31625;
+  const waterFinal = waterSummary?.finalRecords ?? 31625;
+  const waterStations = waterSummary?.stationCount ?? 15;
+  const waterTypes = waterSummary?.measurementTypes ?? 3;
 
   const combinedRawRecords =
     summary.totalRecords +
-    NOISE_RAW_RECORDS +
-    WATER_RAW_RECORDS;
+    noiseRaw +
+    waterRaw;
 
   const combinedFinalRecords =
     summary.finalRecords +
-    NOISE_FINAL_RECORDS +
-    WATER_FINAL_RECORDS;
+    noiseFinal +
+    waterFinal;
 
   const combinedMeasurementTypes =
     summary.measurementTypeCount +
-    NOISE_MEASUREMENT_TYPES +
-    WATER_MEASUREMENT_TYPES;
+    noiseTypes +
+    waterTypes;
 
   const retainedPercentage =
     combinedRawRecords > 0
@@ -303,16 +312,16 @@ export default function DataQuality() {
     {
       title: "Noise dataset",
       value:
-        NOISE_FINAL_RECORDS.toLocaleString(),
-      subtitle: `${NOISE_STATIONS} stations · daytime and nighttime LAEQ`,
+        noiseFinal.toLocaleString(),
+      subtitle: `${noiseStations} stations · daytime and nighttime LAEQ`,
       accent: "#7c3aed",
       background: "#f5f3ff",
     },
     {
       title: "Groundwater dataset",
       value:
-        WATER_FINAL_RECORDS.toLocaleString(),
-      subtitle: `${WATER_STATIONS} stations · conductivity, level and temperature`,
+        waterFinal.toLocaleString(),
+      subtitle: `${waterStations} stations · conductivity, level and temperature`,
       accent: "#2563eb",
       background: "#eff6ff",
     },

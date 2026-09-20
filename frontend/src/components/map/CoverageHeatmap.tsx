@@ -1,10 +1,9 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { CircleMarker } from "react-leaflet";
 
 import { cityGrid } from "../../services/gridService";
 import type { Station } from "../../types/station";
 import { findNearestAirStation } from "../../utils/nearestStation";
-import { isInsideDebrecenBoundary } from "../../utils/isInsideDebrecenBoundary";
 
 interface CoverageHeatmapProps {
   stations: Station[];
@@ -24,17 +23,17 @@ function getCoverageColor(score: number): string {
 
 function getCoverageOpacity(score: number): number {
   if (score >= 70) {
-    return 0.08;
+    return 0.12;
   }
 
   if (score >= 40) {
-    return 0.1;
+    return 0.15;
   }
 
-  return 0.13;
+  return 0.18;
 }
 
-export default function CoverageHeatmap({
+const CoverageHeatmap = React.memo(function CoverageHeatmap({
   stations,
 }: CoverageHeatmapProps) {
   const heatmapPoints = useMemo(() => {
@@ -49,13 +48,13 @@ export default function CoverageHeatmap({
       return [];
     }
 
-    const gridWithDistances = cityGrid
-      .filter((point) =>
-        isInsideDebrecenBoundary(
-          point.lat,
-          point.lng,
-        ),
-      )
+    // Benchmark distance scale for Green Sentinel physical network coverage:
+    // - Full coverage: radius <= 2.0 km (Green, score >= 70, matches 2000m sensor circles)
+    // - Interpolated coverage: 2.0 km < radius <= 4.0 km (Yellow, score 40 - 69)
+    // - Unmonitored blind spot: radius > 4.0 km (Red, score < 40)
+    const REFERENCE_COVERAGE_SCALE_KM = 6.67;
+
+    return cityGrid
       .map((point) => {
         const nearest = findNearestAirStation(
           point.lat,
@@ -63,50 +62,33 @@ export default function CoverageHeatmap({
           airStations,
         );
 
+        if (nearest.distanceKm === null || !Number.isFinite(nearest.distanceKm)) {
+          return null;
+        }
+
+        const coverageScore = Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(
+              100 -
+                (nearest.distanceKm / REFERENCE_COVERAGE_SCALE_KM) * 100,
+            ),
+          ),
+        );
+
+        const color = getCoverageColor(coverageScore);
+        const fillOpacity = getCoverageOpacity(coverageScore);
+
         return {
-          ...point,
-          distanceKm: nearest.distanceKm,
+          id: point.id,
+          lat: point.lat,
+          lng: point.lng,
+          color,
+          fillOpacity,
         };
       })
-      .filter(
-        (
-          point,
-        ): point is {
-          id: number;
-          lat: number;
-          lng: number;
-          distanceKm: number;
-        } =>
-          point.distanceKm !== null &&
-          Number.isFinite(point.distanceKm),
-      );
-
-    if (gridWithDistances.length === 0) {
-      return [];
-    }
-
-    const maximumDistance = Math.max(
-      ...gridWithDistances.map(
-        (point) => point.distanceKm,
-      ),
-    );
-
-    return gridWithDistances.map((point) => {
-      const coverageScore =
-        maximumDistance === 0
-          ? 100
-          : Math.round(
-              100 -
-                (point.distanceKm /
-                  maximumDistance) *
-                  100,
-            );
-
-      return {
-        ...point,
-        coverageScore,
-      };
-    });
+      .filter((p): p is NonNullable<typeof p> => p !== null);
   }, [stations]);
 
   if (heatmapPoints.length === 0) {
@@ -115,32 +97,23 @@ export default function CoverageHeatmap({
 
   return (
     <>
-      {heatmapPoints.map((point) => {
-        const color = getCoverageColor(
-          point.coverageScore,
-        );
-
-        return (
-          <CircleMarker
-            key={`coverage-heat-${point.id}`}
-            center={[
-              point.lat,
-              point.lng,
-            ]}
-            radius={12}
-            interactive={false}
-            pathOptions={{
-              color,
-              fillColor: color,
-              fillOpacity: getCoverageOpacity(
-                point.coverageScore,
-              ),
-              opacity: 0,
-              weight: 0,
-            }}
-          />
-        );
-      })}
+      {heatmapPoints.map((point) => (
+        <CircleMarker
+          key={`heat-${point.id}`}
+          center={[point.lat, point.lng]}
+          radius={8}
+          interactive={false}
+          pathOptions={{
+            color: point.color,
+            fillColor: point.color,
+            fillOpacity: point.fillOpacity,
+            opacity: 0,
+            weight: 0,
+          }}
+        />
+      ))}
     </>
   );
-}
+});
+
+export default CoverageHeatmap;

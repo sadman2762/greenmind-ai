@@ -102,4 +102,16 @@ def get_data_quality() -> dict[str, Any]:
             ),
         },
         "measurementQuality": measurement_quality,
-    }
+        "noiseSummary": {
+            "rawRecords": 300,
+            "finalRecords": 300,
+            "stationCount": 5,
+            "measurementTypes": 2,
+        },
+        "waterSummary": {
+            "rawRecords": 31625,
+            "finalRecords": 31625,
+            "stationCount": 15,
+            "measurementTypes": 3,
+        },
+    }

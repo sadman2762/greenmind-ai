@@ -4,25 +4,32 @@ import {
   Box,
   Chip,
   CssBaseline,
+  IconButton,
   Toolbar,
-  Typography,
+  Tooltip,
 } from "@mui/material";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ParkIcon from "@mui/icons-material/Park";
+import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
 import { Outlet } from "react-router-dom";
 
 import Sidebar from "../components/layout/Sidebar";
+import GreenMindCopilot from "../components/copilot/GreenMindCopilot";
+import BrandLogo from "../components/common/BrandLogo";
+import { useAppTheme } from "../context/ThemeContext";
 
 const DRAWER_WIDTH = 280;
 
 export default function MainLayout() {
+  const { tokens, toggleTheme, isMidnight } = useAppTheme();
+
   return (
     <Box
       sx={{
         display: "flex",
         minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #f3f8f6 0%, #f7faf9 50%, #eef7f4 100%)",
+        background: tokens.appBg,
+        transition: "background 0.3s ease",
       }}
     >
       <CssBaseline />
@@ -34,11 +41,12 @@ export default function MainLayout() {
           zIndex: (theme) => theme.zIndex.drawer + 1,
           height: 76,
           justifyContent: "center",
-          backgroundColor: "rgba(255, 255, 255, 0.88)",
-          color: "#14332d",
-          borderBottom: "1px solid rgba(15, 118, 110, 0.12)",
-          backdropFilter: "blur(18px)",
-          WebkitBackdropFilter: "blur(18px)",
+          backgroundColor: tokens.headerBg,
+          color: tokens.headerText,
+          borderBottom: `1px solid ${tokens.headerBorder}`,
+          backdropFilter: tokens.headerBackdropBlur,
+          WebkitBackdropFilter: tokens.headerBackdropBlur,
+          transition: "background-color 0.3s ease, border-color 0.3s ease",
         }}
       >
         <Toolbar
@@ -66,86 +74,104 @@ export default function MainLayout() {
               sx={{
                 width: 44,
                 height: 44,
-                background:
-                  "linear-gradient(135deg, #0f766e 0%, #16a34a 100%)",
-                boxShadow:
-                  "0 10px 24px rgba(15, 118, 110, 0.25)",
+                background: tokens.brandAvatarBg,
+                boxShadow: isMidnight
+                  ? "0 4px 16px rgba(0, 220, 130, 0.25)"
+                  : "0 10px 24px rgba(15, 118, 110, 0.25)",
+                border: isMidnight
+                  ? "1px solid rgba(0, 220, 130, 0.3)"
+                  : "none",
               }}
             >
-              <ParkIcon />
+              <ParkIcon sx={{ color: isMidnight ? "#00dc82" : "#ffffff" }} />
             </Avatar>
 
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 800,
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1.1,
-                }}
-              >
-                GreenMind AI
-              </Typography>
-
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "#6b7f79",
-                  fontWeight: 500,
-                  display: {
-                    xs: "none",
-                    sm: "block",
-                  },
-                }}
-              >
-                Urban environmental intelligence
-              </Typography>
-            </Box>
+            <BrandLogo variant="header" showTagline={true} />
           </Box>
 
           <Box sx={{ flexGrow: 1 }} />
 
           <Box
-  sx={{
-    display: "flex",
-    alignItems: "center",
-    gap: 1.5,
-  }}
->
-  <Chip
-    icon={<AutoAwesomeRoundedIcon />}
-    label="AI Decision Support"
-    size="small"
-    sx={{
-      display: {
-        xs: "none",
-        sm: "flex",
-      },
-      height: 34,
-      px: 0.5,
-      color: "#6d28d9",
-      backgroundColor: "#f3e8ff",
-      border: "1px solid #e9d5ff",
-      fontWeight: 700,
-      "& .MuiChip-icon": {
-        color: "#7c3aed",
-      },
-    }}
-  />
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+            }}
+          >
+            {/* Quick 1-Click Theme Switcher for Instant Reversion */}
+            <Tooltip
+              title={
+                isMidnight
+                  ? "Switch to Classic Teal Theme"
+                  : "Switch to Midnight Emerald Theme"
+              }
+            >
+              <IconButton
+                onClick={toggleTheme}
+                size="small"
+                sx={{
+                  color: isMidnight ? "#94a3b8" : "#0f766e",
+                  backgroundColor: isMidnight
+                    ? "rgba(255, 255, 255, 0.06)"
+                    : "rgba(15, 118, 110, 0.08)",
+                  border: isMidnight
+                    ? "1px solid rgba(255, 255, 255, 0.12)"
+                    : "1px solid rgba(15, 118, 110, 0.16)",
+                  p: 0.9,
+                  "&:hover": {
+                    backgroundColor: isMidnight
+                      ? "rgba(255, 255, 255, 0.12)"
+                      : "rgba(15, 118, 110, 0.14)",
+                    color: isMidnight ? "#00dc82" : "#0f766e",
+                  },
+                }}
+              >
+                <PaletteRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
 
-  <Chip
-    label="Debrecen"
-    size="small"
-    sx={{
-      height: 34,
-      px: 0.75,
-      color: "#0f766e",
-      backgroundColor: "#e8f7f3",
-      border: "1px solid #cdece4",
-      fontWeight: 700,
-    }}
-  />
-</Box>
+            <Chip
+              icon={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
+              label="AI Decision Support"
+              size="small"
+              sx={{
+                display: {
+                  xs: "none",
+                  sm: "flex",
+                },
+                height: 34,
+                px: 0.5,
+                color: isMidnight ? "#c084fc" : "#6d28d9",
+                backgroundColor: isMidnight
+                  ? "rgba(192, 132, 252, 0.12)"
+                  : "#f3e8ff",
+                border: isMidnight
+                  ? "1px solid rgba(192, 132, 252, 0.25)"
+                  : "1px solid #e9d5ff",
+                fontWeight: 700,
+                "& .MuiChip-icon": {
+                  color: isMidnight ? "#c084fc" : "#7c3aed",
+                },
+              }}
+            />
+
+            <Chip
+              label="Debrecen"
+              size="small"
+              sx={{
+                height: 34,
+                px: 0.75,
+                color: isMidnight ? "#00dc82" : "#0f766e",
+                backgroundColor: isMidnight
+                  ? "rgba(0, 220, 130, 0.1)"
+                  : "#e8f7f3",
+                border: isMidnight
+                  ? "1px solid rgba(0, 220, 130, 0.3)"
+                  : "1px solid #cdece4",
+                fontWeight: 700,
+              }}
+            />
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -183,6 +209,9 @@ export default function MainLayout() {
           <Outlet />
         </Box>
       </Box>
+
+      {/* Persistent AI Decision-Support Copilot */}
+      <GreenMindCopilot />
     </Box>
   );
-}
+}

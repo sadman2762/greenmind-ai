@@ -9,6 +9,9 @@ from app.routes.official_dataset import router as official_dataset_router
 from app.routes.official_stations import (
     router as official_stations_router,
 )
+from app.routes.copilot import router as copilot_router
+from app.routes.sensor_health import router as sensor_health_router
+from app.routes.maintenance import router as maintenance_router
 
 app = FastAPI(
     title="GreenMind AI API",
@@ -51,3 +54,6 @@ app.include_router(recommendations_router)
 app.include_router(official_dataset_router)
 app.include_router(official_stations_router)
 app.include_router(traffic.router)
+app.include_router(copilot_router)
+app.include_router(sensor_health_router)
+app.include_router(maintenance_router)

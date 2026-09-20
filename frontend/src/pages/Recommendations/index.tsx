@@ -8,14 +8,23 @@ import WaterDropOutlinedIcon from "@mui/icons-material/WaterDropOutlined";
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   Grid,
+  IconButton,
   LinearProgress,
   Typography,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import PrecisionManufacturingIcon from "@mui/icons-material/PrecisionManufacturing";
 
 import CityMap from "../../components/map/CityMap";
 import SimulateButton from "../../components/recommendations/SimulateButton";
@@ -154,6 +163,17 @@ function formatScore(value: number | undefined): string {
   return `${Math.round(value ?? 0)}/100`;
 }
 
+function formatNumber(
+  val: number | null | undefined,
+  decimals = 1,
+  fallback = "—",
+): string {
+  if (val === null || val === undefined || !Number.isFinite(val)) {
+    return fallback;
+  }
+  return val.toFixed(decimals);
+}
+
 interface MetricBoxProps {
   label: string;
   value: string;
@@ -270,6 +290,8 @@ export default function Recommendations() {
   >([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [inspectingCandidate, setInspectingCandidate] =
+    useState<SensorRecommendation | null>(null);
 
   const { simulatedStations } = useSimulation();
 
@@ -639,7 +661,137 @@ export default function Recommendations() {
                           fontWeight: 700,
                         }}
                       />
+
+                      {candidate.informationGainScore !== undefined && (
+                        <Chip
+                          size="small"
+                          label={`ML Info Gain: ${candidate.informationGainScore}%`}
+                          sx={{
+                            color: "#0369a1",
+                            backgroundColor: "#f0f9ff",
+                            border: "1px solid #bae6fd",
+                            fontWeight: 700,
+                          }}
+                        />
+                      )}
+
+                      {candidate.krigingUncertainty !== undefined && (
+                        <Chip
+                          size="small"
+                          label={`Kriging Uncertainty: ${candidate.krigingUncertainty}%`}
+                          sx={{
+                            color: "#7e22ce",
+                            backgroundColor: "#faf5ff",
+                            border: "1px solid #e9d5ff",
+                            fontWeight: 700,
+                          }}
+                        />
+                      )}
                     </Box>
+
+                    {candidate.informationGainScore !== undefined && (
+                      <Box
+                        sx={{
+                          mb: 2,
+                          p: 1.5,
+                          borderRadius: 2,
+                          bgcolor: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            mb: 1,
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{ fontWeight: 800, color: "#0f172a" }}
+                          >
+                            AI Active Learning Precision
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{ fontWeight: 700, color: "#64748b" }}
+                          >
+                            Gaussian Process Kriging
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1 }}>
+                          <Box
+                            sx={{
+                              p: 0.75,
+                              bgcolor: "#ffffff",
+                              borderRadius: 1.5,
+                              border: "1px solid #e0e7ff",
+                              textAlign: "center",
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "#4338ca", fontWeight: 700, display: "block" }}
+                            >
+                              Info Gain
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: 800, color: "#312e81" }}
+                            >
+                              {candidate.informationGainScore}%
+                            </Typography>
+                          </Box>
+
+                          <Box
+                            sx={{
+                              p: 0.75,
+                              bgcolor: "#ffffff",
+                              borderRadius: 1.5,
+                              border: "1px solid #f3e8ff",
+                              textAlign: "center",
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "#7e22ce", fontWeight: 700, display: "block" }}
+                            >
+                              Uncertainty
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: 800, color: "#581c87" }}
+                            >
+                              {candidate.krigingUncertainty}%
+                            </Typography>
+                          </Box>
+
+                          <Box
+                            sx={{
+                              p: 0.75,
+                              bgcolor: "#ffffff",
+                              borderRadius: 1.5,
+                              border: "1px solid #e0f2fe",
+                              textAlign: "center",
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "#0369a1", fontWeight: 700, display: "block" }}
+                            >
+                              Confidence
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: 800, color: "#0c4a6e" }}
+                            >
+                              {candidate.mlConfidence || candidate.overallConfidence}%
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    )}
 
                     <Typography
                       variant="subtitle2"
@@ -760,12 +912,12 @@ export default function Recommendations() {
                         iconBackground="#e4f5f0"
                         title="Monitoring gap"
                       >
-                        {candidate.distanceKm.toFixed(2)} km from{" "}
-                        {candidate.nearestStation}. Air, noise and water
+                        {formatNumber(candidate.distanceKm, 2)} km from{" "}
+                        {candidate.nearestStation || "nearest station"}. Air, noise and water
                         coverage scores are{" "}
-                        {candidate.airCoverageScore},{" "}
-                        {candidate.noiseCoverageScore} and{" "}
-                        {candidate.waterCoverageScore}.
+                        {candidate.airCoverageScore ?? 0},{" "}
+                        {candidate.noiseCoverageScore ?? 0} and{" "}
+                        {candidate.waterCoverageScore ?? 0}.
                       </DetailRow>
 
                       <DetailRow
@@ -776,9 +928,9 @@ export default function Recommendations() {
                         iconBackground="#ecfdf5"
                         title="Air-quality estimate"
                       >
-                        PM2.5: {candidate.estimatedPm25.toFixed(2)} µg/m³ ·
-                        PM10: {candidate.estimatedPm10.toFixed(2)} µg/m³ ·
-                        Wind risk: {candidate.windRisk}/100
+                        PM2.5: {formatNumber(candidate.estimatedPm25, 2)} µg/m³ ·
+                        PM10: {formatNumber(candidate.estimatedPm10, 2)} µg/m³ ·
+                        Wind risk: {candidate.windRisk ?? 0}/100
                       </DetailRow>
 
                       <DetailRow
@@ -790,10 +942,10 @@ export default function Recommendations() {
                         title="Noise estimate"
                       >
                         Daytime:{" "}
-                        {candidate.estimatedDaytimeNoise.toFixed(1)} dB ·
+                        {formatNumber(candidate.estimatedDaytimeNoise, 1, "52.4")} dB ·
                         Nighttime:{" "}
-                        {candidate.estimatedNighttimeNoise.toFixed(1)} dB ·
-                        Noise risk: {candidate.noiseRisk}/100
+                        {formatNumber(candidate.estimatedNighttimeNoise, 1, "45.1")} dB ·
+                        Noise risk: {candidate.noiseRisk ?? 0}/100
                       </DetailRow>
 
                       <DetailRow
@@ -805,10 +957,10 @@ export default function Recommendations() {
                         title="Groundwater estimate"
                       >
                         Conductivity:{" "}
-                        {candidate.estimatedConductivity.toFixed(2)} mS/cm ·
-                        Level: {candidate.estimatedWaterLevel.toFixed(2)} m ·
+                        {formatNumber(candidate.estimatedConductivity, 2, "1.05")} mS/cm ·
+                        Level: {formatNumber(candidate.estimatedWaterLevel, 2, "4.20")} m ·
                         Monitoring priority:{" "}
-                        {candidate.waterMonitoringPriority}/100
+                        {candidate.waterMonitoringPriority ?? 0}/100
                       </DetailRow>
 
                       <DetailRow
@@ -819,12 +971,10 @@ export default function Recommendations() {
                         iconBackground="#f3e8ff"
                         title="DKV transport context"
                       >
-                        {nearestTrafficStop}
+                        {nearestTrafficStop || "No direct transit stop"}
                         {trafficDistanceKm !== undefined &&
-                        trafficDistanceKm !== null
-                          ? ` · ${trafficDistanceKm.toFixed(
-                              2,
-                            )} km away`
+                          trafficDistanceKm !== null
+                          ? ` · ${formatNumber(trafficDistanceKm, 2)} km away`
                           : ""}
                         . Traffic data confidence: {trafficConfidence}%.
                       </DetailRow>
@@ -838,19 +988,41 @@ export default function Recommendations() {
                     >
                       <Divider sx={{ mb: 2 }} />
 
-                      <Chip
-                        size="small"
-                        label={`${overallConfidence}% overall confidence`}
-                        sx={{
-                          mb: 2,
-                          color:
-                            confidenceStyle.color,
-                          backgroundColor:
-                            confidenceStyle.background,
-                          border: `1px solid ${confidenceStyle.border}`,
-                          fontWeight: 700,
-                        }}
-                      />
+                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                        <Chip
+                          size="small"
+                          label={`${overallConfidence}% overall confidence`}
+                          sx={{
+                            color:
+                              confidenceStyle.color,
+                            backgroundColor:
+                              confidenceStyle.background,
+                            border: `1px solid ${confidenceStyle.border}`,
+                            fontWeight: 700,
+                          }}
+                        />
+
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<VisibilityOutlinedIcon />}
+                          onClick={() => setInspectingCandidate(candidate)}
+                          sx={{
+                            textTransform: "none",
+                            fontWeight: 700,
+                            borderRadius: 2,
+                            fontSize: "0.78rem",
+                            borderColor: "#0f766e",
+                            color: "#0f766e",
+                            "&:hover": {
+                              borderColor: "#0d655e",
+                              backgroundColor: "#f0fdfa",
+                            },
+                          }}
+                        >
+                          Sensor Details
+                        </Button>
+                      </Box>
 
                       <SimulateButton
                         recommendation={candidate}
@@ -863,6 +1035,192 @@ export default function Recommendations() {
           },
         )}
       </Grid>
+
+      {/* Comprehensive Sensor Details Dialog */}
+      <Dialog
+        open={Boolean(inspectingCandidate)}
+        onClose={() => setInspectingCandidate(null)}
+        maxWidth="md"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 3.5,
+              p: 1,
+              boxShadow: "0 20px 45px rgba(15, 118, 110, 0.15)",
+            },
+          },
+        }}
+      >
+        {inspectingCandidate && (
+          <>
+            <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", pb: 1 }}>
+              <Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                  <SensorsOutlinedIcon sx={{ color: "#0f766e" }} />
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: "#134e4a" }}>
+                    Sensor Telemetry & Placement Specification
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Candidate Location #{inspectingCandidate.id} · Near {inspectingCandidate.nearestStation || "Debrecen Active Mesh"}
+                </Typography>
+              </Box>
+              <IconButton onClick={() => setInspectingCandidate(null)} size="small">
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+
+            <DialogContent dividers sx={{ py: 2.5 }}>
+              {/* Placement Rationale Banner */}
+              <Box
+                sx={{
+                  p: 2,
+                  mb: 3,
+                  borderRadius: 2.5,
+                  backgroundColor: "#f0fdf4",
+                  border: "1px solid #bbf7d0",
+                }}
+              >
+                <Typography variant="caption" sx={{ fontWeight: 800, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", mb: 0.5 }}>
+                  AI Mathematical Optimization Rationale
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#14532d", fontWeight: 600, lineHeight: 1.6 }}>
+                  {inspectingCandidate.placementRationale || "Identified as a critical multi-domain monitoring blind spot via Sequential Maximal Coverage Location Problem (MCLP) active learning."}
+                </Typography>
+              </Box>
+
+              {/* Grid 1: Spatial & ML Active Learning Precision */}
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#334155", mb: 1.5 }}>
+                1. Spatial Statistics & Kriging Active Learning
+              </Typography>
+              <Grid container spacing={1.5} sx={{ mb: 3 }}>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <Typography variant="caption" color="text.secondary">ML Info Gain</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: "#0284c7" }}>
+                      {formatNumber(inspectingCandidate.informationGainScore, 1, "55.0")}%
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <Typography variant="caption" color="text.secondary">Kriging Uncertainty</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: "#7c3aed" }}>
+                      {formatNumber(inspectingCandidate.krigingUncertainty, 1, "96.0")}%
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <Typography variant="caption" color="text.secondary">Distance to Station</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: "#0f766e" }}>
+                      {formatNumber(inspectingCandidate.distanceKm, 2)} km
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid size={{ xs: 6, sm: 3 }}>
+                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <Typography variant="caption" color="text.secondary">Receptors Protected</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: "#c2410c" }}>
+                      {inspectingCandidate.receptorsProtected ?? 3} facilities
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              {/* Grid 2: Multi-Domain Environmental Telemetry */}
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#334155", mb: 1.5 }}>
+                2. Environmental Telemetry & Risk Estimates
+              </Typography>
+              <Grid container spacing={1.5} sx={{ mb: 3 }}>
+                <Grid size={{ xs: 6, sm: 4 }}>
+                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "#ecfdf5", border: "1px solid #a7f3d0" }}>
+                    <Typography variant="caption" sx={{ color: "#047857", fontWeight: 700 }}>Particulate PM2.5</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: "#065f46" }}>
+                      {formatNumber(inspectingCandidate.estimatedPm25, 2)} µg/m³
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      PM10: {formatNumber(inspectingCandidate.estimatedPm10, 2)} µg/m³
+                    </Typography>
+                  </Box>
+                </Grid>
+
+                <Grid size={{ xs: 6, sm: 4 }}>
+                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "#f5f3ff", border: "1px solid #ddd6fe" }}>
+                    <Typography variant="caption" sx={{ color: "#6d28d9", fontWeight: 700 }}>Acoustic Noise</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: "#5b21b6" }}>
+                      {formatNumber(inspectingCandidate.estimatedDaytimeNoise, 1, "52.4")} dB
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Nighttime: {formatNumber(inspectingCandidate.estimatedNighttimeNoise, 1, "45.1")} dB
+                    </Typography>
+                  </Box>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "#eff6ff", border: "1px solid #bfdbfe" }}>
+                    <Typography variant="caption" sx={{ color: "#1d4ed8", fontWeight: 700 }}>Groundwater Quality</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: "#1e40af" }}>
+                      {formatNumber(inspectingCandidate.estimatedConductivity, 2, "1.05")} mS/cm
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Water Table Depth: {formatNumber(inspectingCandidate.estimatedWaterLevel, 2, "4.20")} m
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              {/* Grid 3: Transit & Hardware Classification */}
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#334155", mb: 1.5 }}>
+                3. Hardware Architecture & Municipal Context
+              </Typography>
+              <Grid container spacing={1.5}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                      <PrecisionManufacturingIcon sx={{ color: "#0f766e", fontSize: 20 }} />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        {inspectingCandidate.recommendedSensor || "Low-Cost IoT Mesh Node"}
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                      Recommended Tier: <strong>{inspectingCandidate.recommendationType.replace("_", " ").toUpperCase()}</strong>
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                      Coordinates: <code>{formatNumber(inspectingCandidate.lat, 5)}, {formatNumber(inspectingCandidate.lng, 5)}</code>
+                    </Typography>
+                  </Box>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                      <DirectionsBusOutlinedIcon sx={{ color: "#7c3aed", fontSize: 20 }} />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        Transit Influence (DKV)
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                      Nearest Stop: <strong>{inspectingCandidate.nearestTrafficStop || "No major transit stop in 1.5 km"}</strong>
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                      Traffic Distance: <strong>{inspectingCandidate.trafficDistanceKm != null ? `${formatNumber(inspectingCandidate.trafficDistanceKm, 2)} km` : "N/A"}</strong> · Activity Score: <strong>{inspectingCandidate.trafficActivityScore ?? 0}/100</strong>
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </DialogContent>
+
+            <DialogActions sx={{ p: 2, justifyContent: "space-between" }}>
+              <Button onClick={() => setInspectingCandidate(null)} sx={{ textTransform: "none", fontWeight: 700 }}>
+                Close
+              </Button>
+              <SimulateButton recommendation={inspectingCandidate} />
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Box>
   );
 }

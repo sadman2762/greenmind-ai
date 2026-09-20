@@ -23,6 +23,7 @@ def load_processed_air_data() -> pd.DataFrame:
     return pd.read_csv(
         PROCESSED_FILE,
         parse_dates=["timestamp"],
+        encoding="utf-8",
     )
 
 

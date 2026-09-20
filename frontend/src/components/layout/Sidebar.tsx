@@ -1,7 +1,8 @@
+import AccountBalanceWalletRoundedIcon from "@mui/icons-material/AccountBalanceWalletRounded";
+import BuildCircleRoundedIcon from "@mui/icons-material/BuildCircleRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
-import DataObjectRoundedIcon from "@mui/icons-material/DataObjectRounded";
 import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
-import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import {
   Box,
   Chip,
@@ -14,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
+import { useAppTheme } from "../../context/ThemeContext";
 
 const drawerWidth = 280;
 
@@ -29,19 +31,25 @@ const menu = [
     icon: <InsightsRoundedIcon />,
   },
   {
-    text: "Data Quality",
-    path: "/data-quality",
-    icon: <DataObjectRoundedIcon />,
+    text: "Budget Planning",
+    path: "/budget-planning",
+    icon: <AccountBalanceWalletRoundedIcon />,
   },
   {
-    text: "Methodology",
-    path: "/methodology",
-    icon: <MenuBookRoundedIcon />,
+    text: "Sensor Health",
+    path: "/sensor-health",
+    icon: <BuildCircleRoundedIcon />,
+  },
+  {
+    text: "Maintenance Schedule",
+    path: "/maintenance-schedule",
+    icon: <CalendarMonthRoundedIcon />,
   },
 ];
 
 export default function Sidebar() {
   const location = useLocation();
+  const { tokens, isMidnight } = useAppTheme();
 
   return (
     <Drawer
@@ -58,10 +66,9 @@ export default function Sidebar() {
           boxSizing: "border-box",
           top: 76,
           height: "calc(100vh - 76px)",
-          borderRight:
-            "1px solid rgba(15, 118, 110, 0.12)",
-          background:
-            "linear-gradient(180deg, #ffffff 0%, #f4faf8 100%)",
+          borderRight: `1px solid ${tokens.sidebarBorder}`,
+          background: tokens.sidebarBg,
+          transition: "background 0.3s ease, border-color 0.3s ease",
         },
       }}
     >
@@ -75,7 +82,7 @@ export default function Sidebar() {
         <Typography
           variant="overline"
           sx={{
-            color: "#7a8c87",
+            color: tokens.textMuted,
             fontWeight: 800,
             letterSpacing: "0.12em",
           }}
@@ -91,8 +98,7 @@ export default function Sidebar() {
         }}
       >
         {menu.map((item) => {
-          const selected =
-            location.pathname === item.path;
+          const selected = location.pathname === item.path;
 
           return (
             <ListItemButton
@@ -106,22 +112,20 @@ export default function Sidebar() {
                 mb: 0.75,
                 px: 1.5,
                 borderRadius: 2.5,
-                color: selected
-                  ? "#0f766e"
-                  : "#44534f",
+                color: selected ? tokens.sidebarActiveColor : tokens.sidebarTextColor,
                 transition:
                   "background-color 160ms ease, color 160ms ease, transform 160ms ease",
                 "&:hover": {
-                  backgroundColor:
-                    "rgba(15, 118, 110, 0.08)",
-                  color: "#0f766e",
+                  backgroundColor: tokens.sidebarHoverBg,
+                  color: isMidnight ? "#00dc82" : tokens.primary,
                   transform: "translateX(2px)",
                 },
                 "&.Mui-selected": {
-                  backgroundColor: "#e4f5f0",
-                  color: "#0f766e",
+                  backgroundColor: tokens.sidebarActiveBg,
+                  color: selected ? (isMidnight ? "#0b1329" : tokens.sidebarActiveColor) : tokens.sidebarTextColor,
+                  fontWeight: 700,
                   "&:hover": {
-                    backgroundColor: "#d9f0e9",
+                    backgroundColor: tokens.sidebarActiveBg,
                   },
                 },
                 "&.Mui-selected::before": {
@@ -132,14 +136,17 @@ export default function Sidebar() {
                   bottom: 10,
                   width: 4,
                   borderRadius: "0 6px 6px 0",
-                  backgroundColor: "#0f766e",
+                  backgroundColor: tokens.sidebarActiveIndicator,
+                  boxShadow: isMidnight ? "0 0 10px rgba(0, 220, 130, 0.6)" : "none",
                 },
               }}
             >
               <ListItemIcon
                 sx={{
                   minWidth: 42,
-                  color: "inherit",
+                  color: selected
+                    ? (isMidnight ? "#00dc82" : tokens.primary)
+                    : "inherit",
                 }}
               >
                 {item.icon}
@@ -150,7 +157,7 @@ export default function Sidebar() {
                 slotProps={{
                   primary: {
                     sx: {
-                      fontWeight: selected ? 750 : 600,
+                      fontWeight: selected ? 800 : 600,
                       fontSize: "0.95rem",
                     },
                   },
@@ -170,16 +177,16 @@ export default function Sidebar() {
           pb: 3,
         }}
       >
-        <Divider sx={{ mb: 2.5 }} />
+        <Divider sx={{ mb: 2.5, borderColor: tokens.cardBorder }} />
 
         <Box
           sx={{
             p: 2,
             borderRadius: 3,
-            border:
-              "1px solid rgba(15, 118, 110, 0.14)",
-            backgroundColor:
-              "rgba(232, 247, 243, 0.72)",
+            border: `1px solid ${tokens.sidebarFooterBorder}`,
+            backgroundColor: tokens.sidebarFooterBg,
+            boxShadow: isMidnight ? "0 8px 24px rgba(11, 19, 41, 0.12)" : "none",
+            transition: "all 0.3s ease",
           }}
         >
           <Chip
@@ -187,35 +194,51 @@ export default function Sidebar() {
             label="DEIK.AI Challenge 2026"
             sx={{
               mb: 1.25,
-              color: "#0f766e",
-              backgroundColor: "#d8f1ea",
+              color: isMidnight ? "#00dc82" : "#0f766e",
+              backgroundColor: isMidnight
+                ? "rgba(0, 220, 130, 0.15)"
+                : "#d8f1ea",
+              border: isMidnight ? "1px solid rgba(0, 220, 130, 0.3)" : "none",
               fontWeight: 700,
             }}
           />
 
-          <Typography
-            variant="subtitle2"
-            sx={{
-              fontWeight: 800,
-              color: "#183d35",
-            }}
-          >
-            GreenMind AI
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.5 }}>
+            <Typography
+              component="span"
+              sx={{
+                fontWeight: 900,
+                fontSize: "1.05rem",
+                color: isMidnight ? "#ffffff" : "#183d35",
+              }}
+            >
+              GreenMind
+            </Typography>
+            <Typography
+              component="span"
+              sx={{
+                fontWeight: 900,
+                fontSize: "1.05rem",
+                color: tokens.brandNameWord2,
+              }}
+            >
+              AI
+            </Typography>
+          </Box>
 
           <Typography
             variant="caption"
             sx={{
               display: "block",
-              mt: 0.5,
-              color: "#6b7f79",
-              lineHeight: 1.5,
+              color: isMidnight ? "#94a3b8" : "#6b7f79",
+              lineHeight: 1.4,
+              fontSize: "0.75rem",
             }}
           >
-            Environmental sensor planning for Debrecen.
+            {tokens.brandTagline}
           </Typography>
         </Box>
       </Box>
     </Drawer>
   );
-}
+}

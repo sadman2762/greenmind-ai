@@ -19,16 +19,18 @@ export default function MapBoundsController() {
     }
 
     map.fitBounds(bounds, {
-      padding: [24, 24],
+      padding: [32, 32],
       maxZoom: 10,
       animate: false,
     });
 
+    // Provide ample buffer (40%) beyond Debrecen city limits so Leaflet auto-pan
+    // can smoothly reposition popups without hitting a hard boundary ceiling
     map.setMaxBounds(
-      bounds.pad(0.12),
+      bounds.pad(0.40),
     );
 
-    map.options.maxBoundsViscosity = 0.8;
+    map.options.maxBoundsViscosity = 0.3;
   }, [map]);
 
   return null;

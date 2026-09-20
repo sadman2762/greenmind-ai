@@ -12,16 +12,16 @@ export interface Station {
   location?: string;
   timestamp?: string;
 
-  pm25?: number;
-  pm10?: number;
-  no2?: number;
-  o3?: number;
-  co?: number;
-  co2?: number;
+  pm25?: number | null;
+  pm10?: number | null;
+  no2?: number | null;
+  o3?: number | null;
+  co?: number | null;
+  co2?: number | null;
 
-  humidity?: number;
-  pressure?: number;
+  humidity?: number | null;
+  pressure?: number | null;
 
-  windSpeed?: number;
-  windDirection?: number;
+  windSpeed?: number | null;
+  windDirection?: number | null;
 }
