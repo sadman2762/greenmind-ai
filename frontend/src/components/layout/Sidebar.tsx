@@ -22,7 +22,7 @@ const drawerWidth = 280;
 const menu = [
   {
     text: "Dashboard",
-    path: "/",
+    path: "/dashboard",
     icon: <DashboardRoundedIcon />,
   },
   {

@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "./api";
+
 export type PriorityLevel = "CRITICAL" | "HIGH" | "ROUTINE";
 export type OrderStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 
@@ -49,9 +51,6 @@ export interface UpdateWorkOrderInput {
   notes?: string;
   estimatedHours?: number;
 }
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 export async function fetchAllWorkOrders(): Promise<MaintenanceOrdersResponse> {
   const res = await fetch(`${API_BASE_URL}/api/maintenance-orders/`);

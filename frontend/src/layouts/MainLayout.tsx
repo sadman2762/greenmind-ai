@@ -11,7 +11,8 @@ import {
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ParkIcon from "@mui/icons-material/Park";
 import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
-import { Outlet } from "react-router-dom";
+import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
+import { Link, Outlet } from "react-router-dom";
 
 import Sidebar from "../components/layout/Sidebar";
 import GreenMindCopilot from "../components/copilot/GreenMindCopilot";
@@ -98,6 +99,11 @@ export default function MainLayout() {
               gap: 1.5,
             }}
           >
+            <Tooltip title="Return to the GreenMind introduction">
+              <IconButton component={Link} to="/" aria-label="Replay GreenMind intro" sx={{ color: tokens.brandNameWord2 }}>
+                <PublicRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
             {/* Quick 1-Click Theme Switcher for Instant Reversion */}
             <Tooltip
               title={

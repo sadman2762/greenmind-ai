@@ -1,3 +1,5 @@
+import { API_BASE_URL as API_ORIGIN } from "./api";
+
 export interface CopilotMessage {
   role: "user" | "assistant" | "system";
   content: string;
@@ -17,7 +19,7 @@ export interface CopilotStatus {
   role: string;
 }
 
-const BASE_URL = "http://127.0.0.1:8000/api/copilot";
+const BASE_URL = `${API_ORIGIN}/api/copilot`;
 
 export async function getCopilotStatus(): Promise<CopilotStatus> {
   const response = await fetch(`${BASE_URL}/status`);

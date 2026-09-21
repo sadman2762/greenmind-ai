@@ -1,3 +1,5 @@
+import { API_BASE_URL as API_ORIGIN } from "./api";
+
 export interface OfficialDatasetSummary {
   rows: number;
   stations: number;
@@ -29,8 +31,7 @@ interface LatestMeasurementsResponse {
   stations: LatestStationMeasurement[];
 }
 
-const API_BASE_URL =
-  "http://localhost:8000/api/official-dataset";
+const API_BASE_URL = `${API_ORIGIN}/api/official-dataset`;
 
 export async function getOfficialDatasetSummary(): Promise<
   OfficialDatasetSummary

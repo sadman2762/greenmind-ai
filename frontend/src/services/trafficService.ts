@@ -1,3 +1,5 @@
+import { API_BASE_URL as API } from "./api";
+
 export interface TrafficLocation {
   stopName: string;
   latitude: number;
@@ -13,9 +15,6 @@ interface TrafficResponse {
   source: string;
   locations: TrafficLocation[];
 }
-
-const API =
-  import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 export async function getTrafficLocations(): Promise<TrafficLocation[]> {
   const response = await fetch(`${API}/traffic`);

@@ -1,3 +1,5 @@
+import { API_BASE_URL as API_ORIGIN } from "./api";
+
 export interface DistrictProfile {
   district: string;
   lat: number;
@@ -79,7 +81,7 @@ export interface AiCityAnalyticsResponse {
   };
 }
 
-const API_BASE_URL = "http://localhost:8000/api/recommendations/ai-city-analytics";
+const API_BASE_URL = `${API_ORIGIN}/api/recommendations/ai-city-analytics`;
 
 export async function getAiCityAnalytics(): Promise<AiCityAnalyticsResponse> {
   const response = await fetch(API_BASE_URL);

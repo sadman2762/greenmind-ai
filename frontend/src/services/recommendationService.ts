@@ -1,4 +1,5 @@
 import type { Station } from "../types/station";
+import { API_BASE_URL as API_ORIGIN } from "./api";
 import type { SensorRecommendation } from "../types/recommendation";
 
 interface RecommendationApiResponse {
@@ -8,7 +9,7 @@ interface RecommendationApiResponse {
   recommendations: SensorRecommendation[];
 }
 
-const BASE_URL = "http://localhost:8000/api/recommendations";
+const BASE_URL = `${API_ORIGIN}/api/recommendations`;
 
 export async function getRecommendations(
   simulatedStations: Station[] = [],

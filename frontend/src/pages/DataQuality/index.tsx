@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../../services/api";
 import {
   Alert,
   Box,
@@ -45,8 +46,7 @@ interface QualityCard {
   background: string;
 }
 
-const API_URL =
-  "http://localhost:8000/api/data-quality/";
+const API_URL = `${API_BASE_URL}/api/data-quality/`;
 
 function QualityMetricCard({
   card,
